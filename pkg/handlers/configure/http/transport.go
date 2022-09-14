@@ -2,14 +2,14 @@ package http
 
 import (
 	"context"
-	"encoding/json"
-	cfgsvc "f5ipmanager/internal/core/services/configure"
-	spec "f5ipmanager/internal/core/spec/configure"
-	"io"
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	kithttp "github.com/go-kit/kit/transport/http"
+
+	cfgsvc "f5ipmanager/internal/core/services/configure"
+	spec "f5ipmanager/internal/core/spec/configure"
+	httputils "f5ipmanager/pkg/utils/http"
 )
 
 type HTTPHandlers struct {
@@ -25,51 +25,21 @@ func GetHTTPHandlers(endpoints cfgsvc.Endpoints) HTTPHandlers {
 }
 
 func makeAddConfigHTTPHandler(endpoint endpoint.Endpoint) http.Handler {
-	return kithttp.NewServer(endpoint, decodeAddRequest, encodeResponse)
+	return kithttp.NewServer(endpoint, decodeAddRequest, httputils.EncodeResponse)
 }
 
 func makeRemoveConfigHTTPHandler(endpoint endpoint.Endpoint) http.Handler {
-	return kithttp.NewServer(endpoint, decodeRemoveRequest, encodeResponse)
-}
-
-func encodeResponse(_ context.Context, writer http.ResponseWriter, response interface{}) error {
-	data, err := json.Marshal(response)
-	if err != nil {
-		return err
-	}
-	if _, err := writer.Write(data); err != nil {
-		return err
-	}
-	return nil
-}
-
-func decodeRequest(_ context.Context, request *http.Request, req interface{}) error {
-
-	if request.Body == nil {
-		return spec.ErrorInvalidInput
-	}
-
-	data, err := io.ReadAll(request.Body)
-	if err != nil {
-		return err
-	}
-
-	defer request.Body.Close()
-
-	if err := json.Unmarshal(data, &req); err != nil {
-		return err
-	}
-	return nil
+	return kithttp.NewServer(endpoint, decodeRemoveRequest, httputils.EncodeResponse)
 }
 
 func decodeAddRequest(ctx context.Context, request *http.Request) (interface{}, error) {
 	req := spec.AddIPRangeRequest{}
-	err := decodeRequest(ctx, request, req)
+	err := httputils.DecodeRequest(ctx, request, req)
 	return req, err
 }
 
 func decodeRemoveRequest(ctx context.Context, request *http.Request) (interface{}, error) {
 	req := spec.RemoveIPRangeRequest{}
-	err := decodeRequest(ctx, request, req)
+	err := httputils.DecodeRequest(ctx, request, req)
 	return req, err
 }
