@@ -21,29 +21,29 @@ func NewService(params Params) ports.ManagerService {
 }
 
 func (s *service) AllocateIPAddress(ctx context.Context, req spec.AllocateRequest) (spec.AllocateResponse, error) {
-	getIP, err := s.repo.GetIPAddress(ctx, req.Label, req.Key)
+	ipAdd, err := s.repo.GetIPAddress(ctx, req.Label, req.Key)
 	var resp = spec.AllocateResponse{}
 	if err != nil {
 		return resp, err
 	}
-	if getIP == "" {
-		addIP, err := s.repo.AllocateIPAddress(ctx, req.Label, req.Key)
+	if ipAdd == "" {
+		ipAdd2, err := s.repo.AllocateIPAddress(ctx, req.Label, req.Key)
 		if err != nil {
 			return resp, err
 		}
-		resp.IPAddress = addIP
+		resp.IPAddress = ipAdd2
 		resp.Success = true
 		return resp, nil
 	}
-	resp.IPAddress = getIP
+	resp.IPAddress = ipAdd
 	resp.Success = true
 	return resp, nil
 }
 
 func (s *service) DeallocateIPAddress(ctx context.Context, req spec.DeallocateRequest) (spec.DeallocateResponse, error) {
-	getIP, err := s.repo.GetIPAddress(ctx, req.Label, req.Key)
+	ipAdd, err := s.repo.GetIPAddress(ctx, req.Label, req.Key)
 	var resp = spec.DeallocateResponse{}
-	if getIP == "" {
+	if ipAdd == "" {
 		resp.Success = true
 		return resp, spec.ErrorNotFound
 	}
